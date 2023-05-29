@@ -24,15 +24,20 @@ Open powershell and set directory to the downloaded file.
 ![App Screenshot](https://i.ibb.co/Hq829J9/Screenshot-115.png)
 
 After that, run the following commands: 
+```
 docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-extract -p /opt/car.lua /data/southern-zone-latest.osm.pbf
+```
 
 ![App Screenshot](https://i.ibb.co/GdrGy4M/Screenshot-116.png)
-
+```
 docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-partition /data/southern-zone-latest.osrm
+```
 
 ![App Screenshot](https://i.ibb.co/PGHQn52/Screenshot-117.png)
 
+```
 docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-customize /data/southern-zone-latest.osrm
+```
 
 ![App Screenshot](https://i.ibb.co/MB1kq8y/Screenshot-118.png)
 
