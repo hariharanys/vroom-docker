@@ -1,65 +1,48 @@
-# VROOM Docker image
 
-[![Master push](https://github.com/VROOM-Project/vroom-docker/actions/workflows/master_push.yml/badge.svg)](https://github.com/VROOM-Project/vroom-docker/actions/workflows/master_push.yml)
+# OSRM MAP CONFIGURATION
 
-This image includes all dependencies and projects needed to successfully run an instance of [`vroom-express`](https://github.com/VROOM-Project/vroom-express) on top of [`vroom`](https://github.com/VROOM-Project/vroom). Within 2 minutes you'll have a routing optimization engine running on your machine.
+VROOM is an excellent open-source optimization engine that can provide good solutions to various real-life vehicle routing problems.
 
-```bash
-docker run -dt --name vroom \
-    --net host \  # or set the container name as host in config.yml and use --port 3000:3000 instead, see below
-    -v $PWD/conf:/conf \ # mapped volume for config & log
-    -e VROOM_ROUTER=osrm \ # routing layer: osrm, valhalla or ors
-    vroomvrp/vroom-docker:v1.13.0
-```
 
-If you want to build the image yourself, run a
+First of all let’s start by downloading a region map in OpenStreeMap. http://download.geofabrik.de
 
-`docker build -t vroomvrp/vroom-docker:v1.13.0 --build-arg VROOM_RELEASE=v1.13.0 --build-arg VROOM_EXPRESS_RELEASE=v0.11.0 .`
+Choose your sub region:
 
-> **Note**, you should have access to a self-hosted instance of OSRM, Valhalla or OpenRouteService for the routing server.
 
-## Tagging
 
-The tagging scheme follows the release convention of `vroom` core.
 
-## Customization
 
-### Environment variables
+## Screenshots
+![App Screenshot](https://i.ibb.co/N6pt2gD/Screenshot-114.png)
 
-- `VROOM_ROUTER`: specifies the routing engine to be used, `osrm`, `valhalla` or `ors`. Default `osrm`.
+Each region has a sub region selected according to your need.
 
-The pre-configured host for the routing servers is `localhost` and `port: 8080` for ORS, `port: 5000` for OSRM and `port: 8002` for Valhalla.
+![App Screenshot](https://i.ibb.co/6XnvSHK/Screenshot-113.png)
 
-> **Note**, the environment variable `VROOM_ROUTER` has precedence over the `router` setting in `config.yml`.
+Open powershell and set directory to the downloaded file.
 
-### Volume mounting
+![App Screenshot](https://i.ibb.co/Hq829J9/Screenshot-115.png)
 
-All relevant files are located inside the container's `/conf` directory and can be shared with the host. These include:
+After that, run the following commands: 
+docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-extract -p /opt/car.lua /data/southern-zone-latest.osm.pbf
 
-- `access.log`: the server log for `vroom-express`
-- `config.yml`: the server configuration file, which gives you full control over the `vroom-express` configuration. If you need to edit the configuration, run `docker restart vroom` to restart the server with the new settings.
+![App Screenshot](https://i.ibb.co/GdrGy4M/Screenshot-116.png)
 
-Add a `-v $PWD/vroom-conf:/conf` to your `docker run` command.
+docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-partition /data/southern-zone-latest.osrm
 
-### Build arguments
+![App Screenshot](https://i.ibb.co/PGHQn52/Screenshot-117.png)
 
-If you prefer to build the image from source, there are 2 build arguments:
+docker run -t -v "${PWD}:/data" osrm/osrm-backend osrm-customize /data/southern-zone-latest.osrm
 
-- `VROOM_RELEASE`: specifies VROOM's git [branch](https://github.com/VROOM-Project/vroom/branches), [commit hash](https://github.com/VROOM-Project/vroom/commits/master) or [release](https://github.com/VROOM-Project/vroom/releases) (e.g. `v1.11.0`) to install in the container
-- `VROOM_EXPRESS_RELEASE`: specifies `vroom-express`'s git [branch](https://github.com/VROOM-Project/vroom-express/branches), [commit hash](https://github.com/VROOM-Project/vroom-express/commits/master) or [release](https://github.com/VROOM-Project/vroom-express/releases) (e.g. `v0.11.0`) to install in the container
+![App Screenshot](https://i.ibb.co/MB1kq8y/Screenshot-118.png)
 
-> **Note**, not all versions are compatible with each other
+After creating these files, we had to clone the vroom-docker.
 
-## Routing Server
+Now you need to change the left part in osrm volumes to the path you have created your osrm data. Leave the right part as it is(/data) in docker-compose.yml file.
 
-You have the option to use [OSRM](https://github.com/Project-OSRM/osrm-backend), [Valhalla](https://github.com/valhalla/valhalla) or [OpenRouteService](https://github.com/GIScience/openrouteservice). However, the proper setup in Docker or `docker-compose` depends on how you run the routing server.
+Also change the zone name in command: field
 
-### Routing server in local Docker container
+After this, you can start your vroom instance with docker-compose up -d
 
-If you started the routing layer in a separate Docker container via `docker run` and didn't create a docker network, you'll have to start the `vroom` container on the `host` network by adding `--net host`. The disadvantage is that you'll have to assign `vroom-express` configured `port` on the host machine. If port 3000 is already occupied on your machine, configure a different port in `config.yml`.
+select all the osrm map and paste in separate folder named as osrm.
 
-Alternatively you can add both containers to a private Docker network and change the routing server host(s) to the routing server container name(s) in `config.yml` before restarting the `vroom` container. However, the concepts involved are beyond the scope of this project.
-
-### Routing server on a remote server
-
-In this case, you'll have to edit the mapped `config.yml` to include the host and port you published the routing server on.
